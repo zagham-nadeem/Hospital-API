@@ -875,9 +875,10 @@ $app->get('/getoperation', function (Request $request, Response $response) {
 $app->post('/deleteoperate', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $id = $requestData->id;
+    $rd_id = $requestData->rd_id;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->deleteoperate($id)) {
+    if ($db->deleteoperate($id, $rd_id)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data deleted sucessfully';
     } else {
@@ -1383,6 +1384,7 @@ $app->get('/getTestResult/{tr_id}', function (Request $request, Response $respon
 $app->post('/discharge_patient', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $op_id = $requestData->discharge->op_id;
+    $r_id = $requestData->discharge->r_id;
     $discharge_expense = $requestData->discharge_expense;
     $db = new DbOperation();
     $responseData = array();

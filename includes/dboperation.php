@@ -969,7 +969,7 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
         $stmt->bind_param("sisisiiiisssssii", $type,$pid, $p_name, $p_age, $p_no, $d_id, $r_id, $room_no, $charges, $d_fees, $time, $p_gender, $opstatus, $description, $advance, $remaining_amount);
         if ($stmt->execute()) {
             $status = 'confirm';
-            $stmt = $this->con->prepare("UPDATE `room_detail` SET `status`= ? WHERE `r_id` = ? AND `room_no` = ?");
+            $stmt = $this->con->prepare("UPDATE `room_detail` SET `status`= ? WHERE `rd_id` = ? AND `room_no` = ?");
             $stmt->bind_param("sii", $status, $r_id, $room_no);
             if ($stmt->execute()) {
                 return PROFILE_CREATED;
@@ -1024,16 +1024,23 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     }
 
 
-    //delete
+    //delete operate
 
-    function deleteoperate($id)
+    function deleteoperate($id, $rd_id)
     {
-        $stmt = $this->con->prepare("DELETE FROM `operate` Where id = ? ");
+        $stmt = $this->con->prepare("DELETE FROM `operate` Where id = ?");
         $stmt->bind_param("i", $id);
         if ($stmt->execute()) {
-            return PROFILE_DELETED;
+            $status = "pending";
+            $stmt = $this->con->prepare("UPDATE `room_detail` SET `status`=? WHERE `rd_id`=?");
+            $stmt->bind_param("si", $status, $rd_id);
+            if ($stmt->execute()) {
+                return PROFILE_CREATED;
+            } else {
+                return PROFILE_NOT_CREATED;
+            }
         }
-        return PROFILE_NOT_DELETED;
+        return PROFILE_NOT_CREATED;
     }
 
 
@@ -1913,10 +1920,10 @@ function getTestResult($tr_id)
     function getpendingoperation()
     {
         $status = "pending";
-        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.remaining_amount as remaining_amount , room_detail.r_id as r_id , room_detail.room_no , doctor.name as drname FROM `operate` join room_detail on operate.r_id =room_detail.r_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id WHERE operate.status = ?");
+        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , doctor.name as drname FROM `operate` join room_detail on operate.r_id =room_detail.r_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id WHERE operate.status = ?");
         $stmt->bind_param("s", $status);
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $remaining_amount, $r_id, $room_no, $drname);
+        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $drname);
 
         $cat = array();
         while ($stmt->fetch()) {
@@ -1929,7 +1936,9 @@ function getTestResult($tr_id)
             $test['time'] = $time;
             $test['p_gender'] = $p_gender;
             $test['opdescription'] = $opdescription;
+            $test['advance'] = $advance;
             $test['remaining_amount'] = $remaining_amount;
+            $test['rd_id'] = $rd_id;
             $test['r_id'] = $r_id;
             $test['room_no'] = $room_no;
             $test['drname'] = $drname;
@@ -2003,6 +2012,33 @@ function getTestResult($tr_id)
             $test['room_no'] = $room_no;
             $test['charges'] = $charges;
             $test['status'] = $status;
+            array_push($cat, $test);
+        }
+        return $cat;
+    }
+    // Get Opearte Expense and Discharged Patient Data
+    function getDischarged()
+    {
+        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.remaining_amount as remaining_amount , room_detail.rd_id as r_id , room_detail.room_no , doctor.name as drname FROM `operate` join room_detail on operate.r_id =room_detail.rd_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id WHERE operate.`status` = 'confirm'");
+        $stmt->execute();
+        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $remaining_amount, $r_id, $room_no, $drname);
+
+        $cat = array();
+        while ($stmt->fetch()) {
+            $test = array();
+            $test['id'] = $id;
+            $test['p_name'] = $p_name;
+            $test['p_age'] = $p_age;
+            $test['p_no'] = $p_no;
+            $test['d_fees'] = $d_fees;
+            $test['time'] = $time;
+            $test['p_gender'] = $p_gender;
+            $test['opdescription'] = $opdescription;
+            $test['remaining_amount'] = $remaining_amount;
+            $test['r_id'] = $r_id;
+            $test['room_no'] = $room_no;
+            $test['drname'] = $drname;
+
             array_push($cat, $test);
         }
         return $cat;
