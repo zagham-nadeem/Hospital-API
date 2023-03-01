@@ -1447,5 +1447,11 @@ $app->get('/getRoomsbyCat/{r_id}', function (Request $request, Response $respons
     $result = $db->getOpearteCategory($r_id);
     $response->getBody()->write(json_encode($result));
 });
+$app->get('/getDischarged', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getDischarged();
+    $response->getBody()->write(json_encode($result));
+});
+
 $app->run();
 ?>

@@ -2019,25 +2019,32 @@ function getTestResult($tr_id)
     // Get Opearte Expense and Discharged Patient Data
     function getDischarged()
     {
-        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.remaining_amount as remaining_amount , room_detail.rd_id as r_id , room_detail.room_no , doctor.name as drname FROM `operate` join room_detail on operate.r_id =room_detail.rd_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id WHERE operate.`status` = 'confirm'");
+        $status = "confirm";
+        $stmt = $this->con->prepare("SELECT operate.id as id,  operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.status as status , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , doctor.name as drname ,SUM(discharge_expense.amount) as total_expense, discharge.date as discharge_date FROM `operate` join room_detail on operate.r_id =room_detail.r_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id  JOIN discharge ON discharge.op_id = operate.id JOIN discharge_expense ON discharge_expense.d_id = discharge.d_id WHERE operate.status = ?");
+        $stmt->bind_param("s", $status);
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $remaining_amount, $r_id, $room_no, $drname);
+        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time,$status, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $drname, $total_expense, $discharge_date);
 
         $cat = array();
         while ($stmt->fetch()) {
             $test = array();
-            $test['id'] = $id;
+            $test['id'] = $id;            
             $test['p_name'] = $p_name;
             $test['p_age'] = $p_age;
             $test['p_no'] = $p_no;
             $test['d_fees'] = $d_fees;
             $test['time'] = $time;
+            $test['status'] = $status;
             $test['p_gender'] = $p_gender;
             $test['opdescription'] = $opdescription;
+            $test['advance'] = $advance;
             $test['remaining_amount'] = $remaining_amount;
+            $test['rd_id'] = $rd_id;
             $test['r_id'] = $r_id;
             $test['room_no'] = $room_no;
             $test['drname'] = $drname;
+            $test['total_expense'] = $total_expense;
+            $test['discharge_date'] = $discharge_date;
 
             array_push($cat, $test);
         }
