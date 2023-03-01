@@ -1452,6 +1452,12 @@ $app->get('/getDischarged', function (Request $request, Response $response) {
     $result = $db->getDischarged();
     $response->getBody()->write(json_encode($result));
 });
+$app->get('/getDischargedExpensebyDid/{d_id}', function (Request $request, Response $response) {
+    $d_id = $request->getAttribute('d_id');
+    $db = new DbOperation();
+    $result = $db->getDischargedExpensebyDid($d_id);
+    $response->getBody()->write(json_encode($result));
+});
 
 $app->run();
 ?>
