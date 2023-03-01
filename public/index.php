@@ -125,6 +125,7 @@ $app->post('/profileupdate', function (Request $request, Response $response) {
 
 $app->post('/add_doctor', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
+    $dp_id = $requestData->doctor->dp_id;
     $name = $requestData->doctor->name;
     $email = $requestData->doctor->email;
     $age = $requestData->doctor->age;
@@ -137,7 +138,7 @@ $app->post('/add_doctor', function (Request $request, Response $response) {
     $days = $requestData->days;
     $db = new DbOperation();
     $responseData = array();
-    $result = $db->doctordetail($name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
+    $result = $db->doctordetail($dp_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
     $responseData = array();
     if ($result == PROFILE_NOT_CREATED) {
         $responseData['error'] = true;

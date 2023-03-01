@@ -223,10 +223,10 @@ class DbOperation
 
     //doctor details
 
-    function doctordetail($name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password)
+    function doctordetail($dp_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password)
     {
-        $stmt = $this->con->prepare("INSERT INTO `doctor`(`name`, `email`, `age`, `gender`, `fees`, `d_no`, `speciality`, `username`, `password`) VALUES (?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssissssss", $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
+        $stmt = $this->con->prepare("INSERT INTO `doctor`(`dp_id`, `name`, `email`, `age`, `gender`, `fees`, `d_no`, `speciality`, `username`, `password`) VALUES (?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("ississssss", $dp_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
         if ($stmt->execute()) {
             $stmt = $this->con->prepare("SELECT MAX(D_ID) as `d_id` FROM doctor");
             $stmt->execute();
@@ -263,14 +263,15 @@ class DbOperation
 
     function getdoctor()
     {
-        $stmt = $this->con->prepare("SELECT * FROM `doctor`");
+        $stmt = $this->con->prepare("SELECT doctor.d_id, doctor.dp_id, doctor.name, doctor.email, doctor.age, doctor.gender, doctor.fees, doctor.d_no, doctor.speciality, doctor.username, doctor.password, department.dp_name, department.dp_description FROM `doctor` JOIN department ON doctor.dp_id = department.dp_id");
         $stmt->execute();
-        $stmt->bind_result($d_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
+        $stmt->bind_result($d_id, $dp_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password, $dp_name, $dp_description);
 
         $cat = array();
         while ($stmt->fetch()) {
             $test = array();
             $test['d_id'] = $d_id;
+            $test['dp_id'] = $dp_id;
             $test['name'] = $name;
             $test['email'] = $email;
             $test['age'] = $age;
@@ -280,6 +281,8 @@ class DbOperation
             $test['speciality'] = $speciality;
             $test['username'] = $username;
             $test['password'] = $password;
+            $test['dp_name'] = $dp_name;
+            $test['dp_description'] = $dp_description;
             array_push($cat, $test);
         }
         return $cat;
