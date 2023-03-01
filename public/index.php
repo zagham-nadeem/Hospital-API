@@ -1447,5 +1447,64 @@ $app->get('/getRoomsbyCat/{r_id}', function (Request $request, Response $respons
     $result = $db->getOpearteCategory($r_id);
     $response->getBody()->write(json_encode($result));
 });
+
+
+$app->post('/adddepartment', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $dp_name = $requestData->dp_name;
+    $dp_description = $requestData->dp_description;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->adddepartment($dp_name, $dp_description)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'data inserted sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'data is not inserted';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+$app->get('/getdepartment', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getdepartment();
+    $response->getBody()->write(json_encode($result));
+});
+
+$app->post('/updatedepartment', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $dp_id = $requestData->dp_id;
+    $dp_name = $requestData->dp_name;
+    $dp_description = $requestData->dp_description;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->updatedepartment($dp_id, $dp_name, $dp_description)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'data Updated sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'data is not Updated';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
+$app->post('/deletedepartment', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $dp_id = $requestData->dp_id;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->deletedepartment($dp_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'data deleted sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'data is not deleted';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+
 $app->run();
 ?>

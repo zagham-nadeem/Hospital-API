@@ -2043,8 +2043,61 @@ function getTestResult($tr_id)
         }
         return $cat;
     }
+
+// department
+
+function adddepartment($dp_name, $dp_description)
+{
+    $stmt = $this->con->prepare("INSERT INTO `department`(`dp_name`, `dp_description`) VALUES (?,?)");
+    $stmt->bind_param("ss", $dp_name, $dp_description);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+function getdepartment()
+{
+    $stmt = $this->con->prepare("SELECT `dp_id`, `dp_name`, `dp_description` FROM `department`");
+    $stmt->execute();
+    $stmt->bind_result($dp_id, $dp_name, $dp_description);
+
+    $cat = array();
+    while ($stmt->fetch()) {
+        $test = array();
+        $test['dp_id'] = $dp_id;
+        $test['dp_name'] = $dp_name;
+        $test['dp_description'] = $dp_description;
+
+        array_push($cat, $test);
+    }
+    return $cat;
+}
+
+
+function updatedepartment($dp_id, $dp_name, $dp_description)
+{
+    $stmt = $this->con->prepare("UPDATE `department` SET `dp_name`=?,`dp_description`=? WHERE `dp_id`=?");
+    $stmt->bind_param("ssi", $dp_name, $dp_description, $dp_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+function deletedepartment($dp_id)
+{
+    $stmt = $this->con->prepare("DELETE FROM `department` WHERE `dp_id`=?");
+    $stmt->bind_param("i", $dp_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
 }
 
 
 
+
+
+}
 ?>
