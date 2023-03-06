@@ -671,22 +671,44 @@ $app->get('/getappointmentbyd_id/{d_id}', function (Request $request, Response $
 
 
 
+// $app->post('/updateappointstatus', function (Request $request, Response $response) {
+//     $requestData = json_decode($request->getBody());
+//     $id = $requestData->id;
+//     $db = new DbOperation();
+//     $responseData = array();
+//     if ($db->updateappointstatus($id)) {
+//         $responseData['error'] = false;
+//         $responseData['message'] = 'data inserted sucessfully';
+//     } else {
+//         $responseData['error'] = true;
+//         $responseData['message'] = 'data is not inserted';
+//     }
+//     $response->getBody()->write(json_encode($responseData));
+// });
 $app->post('/updateappointstatus', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $id = $requestData->id;
+    $type = $requestData->type;
+    $fees = $requestData->fees;
     $db = new DbOperation();
     $responseData = array();
+    $netbalance = $db->getNetbalance();
+    $net_balance = 0;
+    $net_balance = $fees + $netbalance;
+    $description = "Appointemnt No. " .$id ."Added";
+    $sub_type = "Appointemnt";
+    $debit = 0;
     if ($db->updateappointstatus($id)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data inserted sucessfully';
+        $responseData['data'] = $db->transactions($type, $sub_type, $debit, $fees, $net_balance, $description);
     } else {
         $responseData['error'] = true;
         $responseData['message'] = 'data is not inserted';
     }
     $response->getBody()->write(json_encode($responseData));
 });
-
-
+// 
 $app->post('/deleteappointmentuser', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $u_id = $requestData->u_id;
@@ -734,9 +756,17 @@ $app->post('/updateappointment', function (Request $request, Response $response)
 $app->post('/deleteappointment', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $id = $requestData->id;
+    $fees = $requestData->fees;
     $db = new DbOperation();
+    $netbalance = $db->getNetbalance();
+        $net_balance = 0;
+        $net_balance =  $netbalance - $fees;
+        $type = "appointment";
+        $sub_type = "appointment deleted";
+        $description = "Appointment No" .$id. "Deleted";
     $responseData = array();
     if ($db->deleteappointment($id)) {
+        $db->transactions($type, $sub_type, $fees, 0, $net_balance, $description);
         $responseData['error'] = false;
         $responseData['message'] = 'data deleted sucessfully';
     } else {
@@ -806,6 +836,55 @@ $app->post('/updateoperatecategory', function (Request $request, Response $respo
 
 //operate data
 
+// $app->post('/operate', function (Request $request, Response $response) {
+//     $requestData = json_decode($request->getBody());
+//     $type = $requestData->type;
+//     $pid = $requestData->pid;
+//     $p_name = $requestData->p_name;
+//     $p_age = $requestData->p_age;
+//     $p_no = $requestData->p_no;
+//     $d_id = $requestData->d_id;
+//     $r_id = $requestData->r_id;
+//     $room_no = $requestData->room_no;
+//     $charges = $requestData->charges;
+//     $d_fees = $requestData->d_fees;
+//     $p_gender = $requestData->p_gender;
+//     $p_blood = $requestData->p_blood;
+//     $p_address = $requestData->p_address;
+//     $cnic = $requestData->cnic;
+//     $fh_name = $requestData->fh_name;
+//     $description = $requestData->description;
+//     $advance = $requestData->advance;
+//     $remaining_amount = $requestData->remaining_amount;
+//     $is_new = $requestData->is_new;
+//     $db = new DbOperation();
+//     if($is_new == true) {
+//         $result = $db->addPatientOperate($p_name, $p_age, $p_gender, $p_blood, $p_address, $cnic, $p_no, $fh_name);
+//         if ($result == PROFILE_NOT_CREATED) {
+//         $responseData['error'] = true;
+//         $responseData['Message'] = "patient is  not added";
+//     } else {
+//         $p_id = $result; 
+//         $responseData = array();
+//     if ($db->operate($type,$p_id, $p_name, $p_age, $p_no, $d_id, $r_id, $room_no, $charges, $d_fees, $p_gender, $description, $advance, $remaining_amount)) {
+//         $responseData['error'] = false;
+//         $responseData['message'] = 'data Inserted sucessfully';
+//     } else {
+//         $responseData['error'] = true;
+//         $responseData['message'] = 'data is not Inserted';
+        
+//     }
+//     }
+//     }
+//     else {
+//         if($db->operate($type,$pid, $p_name, $p_age, $p_no, $d_id, $r_id, $room_no, $charges, $d_fees, $p_gender, $description, $advance, $remaining_amount)) {
+//             $responseData['error'] = false;
+//         $responseData['message'] = 'data Inserted sucessfully';
+//         }
+//     }
+//     $response->getBody()->write(json_encode($responseData));
+// });
+
 $app->post('/operate', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $type = $requestData->type;
@@ -828,6 +907,15 @@ $app->post('/operate', function (Request $request, Response $response) {
     $remaining_amount = $requestData->remaining_amount;
     $is_new = $requestData->is_new;
     $db = new DbOperation();
+    // Transaction
+    $responseData = array();
+    $netbalance = $db->getNetbalance();
+    $net_balance = 0;
+    $net_balance = $advance + $netbalance;
+    $t_description = "Operate Added";
+    $sub_type = $type.' Advance';
+    $debit = 0;
+    // 
     if($is_new == true) {
         $result = $db->addPatientOperate($p_name, $p_age, $p_gender, $p_blood, $p_address, $cnic, $p_no, $fh_name);
         if ($result == PROFILE_NOT_CREATED) {
@@ -837,6 +925,7 @@ $app->post('/operate', function (Request $request, Response $response) {
         $p_id = $result; 
         $responseData = array();
     if ($db->operate($type,$p_id, $p_name, $p_age, $p_no, $d_id, $r_id, $room_no, $charges, $d_fees, $p_gender, $description, $advance, $remaining_amount)) {
+        $db->transactions($type, $sub_type, $debit, $advance, $net_balance, $t_description);
         $responseData['error'] = false;
         $responseData['message'] = 'data Inserted sucessfully';
     } else {
@@ -848,14 +937,13 @@ $app->post('/operate', function (Request $request, Response $response) {
     }
     else {
         if($db->operate($type,$pid, $p_name, $p_age, $p_no, $d_id, $r_id, $room_no, $charges, $d_fees, $p_gender, $description, $advance, $remaining_amount)) {
+            $db->transactions($type, $sub_type, $debit, $advance, $net_balance, $t_description);
             $responseData['error'] = false;
         $responseData['message'] = 'data Inserted sucessfully';
         }
     }
     $response->getBody()->write(json_encode($responseData));
 });
-
-
 //get
 
 
@@ -1386,15 +1474,24 @@ $app->post('/discharge_patient', function (Request $request, Response $response)
     $requestData = json_decode($request->getBody());
     $op_id = $requestData->discharge->op_id;
     $r_id = $requestData->discharge->r_id;
+    $total = $requestData->discharge->total;
     $discharge_expense = $requestData->discharge_expense;
     $db = new DbOperation();
     $responseData = array();
     $result = $db->discharge($op_id);
     $responseData = array();
+    $netbalance = $db->getNetbalance();
+        $net_balance = 0;
+        $net_balance = $total + $netbalance;
+        $type = "discharge";
+        $sub_type = "Patient Discharge";
+        $description = "Patient No" .$op_id. "Discharge";
+    $responseData = array();
     if ($result == PROFILE_NOT_CREATED) {
         $responseData['error'] = true;
         $responseData['Message'] = "discharge is  not added";
     } else {
+        $db->transactions($type, $sub_type, 0, $total, $net_balance, $description);
         $d_id = $result;
         $result = $db->updateOperateStatus($op_id);
         $result = $db->updateRoomStatus($r_id);
@@ -1518,6 +1615,59 @@ $app->get('/getDischargedExpensebyDid/{d_id}', function (Request $request, Respo
     $result = $db->getDischargedExpensebyDid($d_id);
     $response->getBody()->write(json_encode($result));
 });
-
+// Add Transactions
+$app->post('/transactions', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $type = $requestData->type;
+    $sub_type = $requestData->sub_type;
+    $debit = $requestData->debit;
+    $credit = $requestData->credit;
+    // $net_balance = $requestData->net_balance;
+    $description = $requestData->description;
+    $db = new DbOperation();
+    $responseData = array();
+    $netbalance = $db->getNetbalance();
+    if($type == 'credit') {
+        $net_balance = 0;
+        $net_balance = $credit + $netbalance;
+    }
+    if($type == 'debit' || $type == 'expense' ) {
+        $net_balance = 0;
+        $net_balance =  $netbalance - $debit;
+    }
+    if ($db->transactions($type, $sub_type, $debit, $credit, $net_balance, $description)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'transaction sucessfull';
+        // $responseData['data'] = $db->transactions($type, $sub_type, $debit, $credit, $net_balance, $description);
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'transaction is not sucessfull';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+$app->get('/getNetbalanceCreditDebit', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getNetbalanceCreditDebit();
+    $response->getBody()->write(json_encode($result));
+});
+$app->get('/getTransactions', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getTransactions();
+    $response->getBody()->write(json_encode($result));
+});
+//  get Trasnsaction by Tyoe and SubType
+$app->post('/getTransactionbyType', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $type = $requestData->type;
+    $sub_type = $requestData->sub_type;
+    $db = new DbOperation();
+    if($type == 'all') {
+        $result = $db->getTransactions();
+    }
+    else {
+        $result = $db->getTransactionsbyType($type, $sub_type);
+    }
+    $response->getBody()->write(json_encode($result));
+});
 $app->run();
 ?>

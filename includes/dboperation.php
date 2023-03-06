@@ -228,7 +228,7 @@ class DbOperation
         $stmt = $this->con->prepare("INSERT INTO `doctor`(`dp_id`, `name`, `email`, `age`, `gender`, `fees`, `d_no`, `speciality`, `username`, `password`) VALUES (?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("ississssss", $dp_id, $name, $email, $age, $gender, $fees, $d_no, $speciality, $username, $password);
         if ($stmt->execute()) {
-            $stmt = $this->con->prepare("SELECT MAX(D_ID) as `d_id` FROM doctor");
+            $stmt = $this->con->prepare("SELECT MAX(d_id) as `d_id` FROM doctor");
             $stmt->execute();
             $stmt->bind_result($d_id);
             $stmt->fetch();
@@ -1923,10 +1923,9 @@ function getTestResult($tr_id)
     function getpendingoperation()
     {
         $status = "pending";
-        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , doctor.name as drname FROM `operate` join room_detail on operate.r_id =room_detail.r_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id WHERE operate.status = ?");
-        $stmt->bind_param("s", $status);
+        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , room_detail.charges as room_charges, doctor.name as drname FROM `operate` JOIN room_detail ON room_detail.rd_id = operate.r_id JOIN doctor ON doctor.d_id = operate.d_id WHERE operate.status = 'pending'");
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $drname);
+        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $room_charges, $drname);
 
         $cat = array();
         while ($stmt->fetch()) {
@@ -1944,6 +1943,7 @@ function getTestResult($tr_id)
             $test['rd_id'] = $rd_id;
             $test['r_id'] = $r_id;
             $test['room_no'] = $room_no;
+            $test['room_charges'] = $room_charges;
             $test['drname'] = $drname;
 
             array_push($cat, $test);
@@ -2022,9 +2022,7 @@ function getTestResult($tr_id)
     // Get Opearte Expense and Discharged Patient Data
     function getDischarged()
     {
-        $status = "confirm";
-        $stmt = $this->con->prepare("SELECT operate.id as id,  operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.status as status , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , doctor.name as drname ,SUM(discharge_expense.amount) as total_expense, discharge.date as discharge_date, discharge.d_id as d_id  FROM `operate` join room_detail on operate.r_id =room_detail.r_id AND operate.room_no = room_detail.room_no join doctor on operate.d_id = doctor.d_id  JOIN discharge ON discharge.op_id = operate.id JOIN discharge_expense ON discharge_expense.d_id = discharge.d_id WHERE operate.status = ?");
-        $stmt->bind_param("s", $status);
+        $stmt = $this->con->prepare("SELECT DISTINCT operate.id ,operate.p_name, operate.p_age ,operate.p_no , operate.d_fees , operate.date as time , operate.status , operate.p_gender , operate.description, operate.advance  , operate.remaining_amount , room_detail.rd_id , room_detail.r_id , room_detail.room_no , doctor.name ,(SELECT SUM(discharge_expense.amount)  FROM discharge_expense WHERE discharge_expense.d_id = discharge.d_id) as total_expense, discharge.date as discharge_date, discharge.d_id   FROM operate join room_detail on room_detail.rd_id = operate.r_id  join doctor on doctor.d_id = operate.d_id JOIN discharge ON discharge.op_id = operate.id JOIN discharge_expense ON discharge_expense.d_id = discharge.d_id WHERE operate.`status` = 'confirm'");
         $stmt->execute();
         $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time,$status, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $drname, $total_expense, $discharge_date, $d_id);
 
@@ -2124,8 +2122,107 @@ function getDischargedExpensebyDid($d_id)
     return $cat;
 }
 
+ //  Add Transactions
+ function transactions($type, $sub_type, $debit, $credit, $net_balance, $description)
+ {   $date = date("ymd");
+     $stmt = $this->con->prepare("INSERT INTO `transaction`(`type`, `sub_type`, `debit`, `credit`, `net_balance`, `description`, `date`) VALUES (?,?,?,?,?,?,?)");
+     $stmt->bind_param("ssiiiss", $type, $sub_type, $debit, $credit, $net_balance, $description, $date);
+     if ($stmt->execute()) {
+         $stmt = $this->con->prepare("SELECT t_id from transaction where t_id = (select MAX(t_id) from transaction)");
+         $stmt->execute();
+        $stmt->bind_result($t_id);
+        $stmt->fetch();
+        return $t_id;
+     }
+     return PROFILE_NOT_CREATED;
+ }
 
+ function getNetbalance() {
+        $stmt = $this->con->prepare("SELECT net_balance FROM transaction where t_id = (select MAX(t_id) from transaction)");
+        $stmt->execute();
+        $stmt->bind_result($netbalance);
+        $stmt->fetch();
+        return $netbalance;
+ }
+ //  Add Transactions
+ function updateNetBalance($t_id, $net_balance)
+ {   $date = date("ymd");
+     $stmt = $this->con->prepare("UPDATE `transaction` SET `net_balance`=? WHERE t_id = ?");
+     $stmt->bind_param("ii", $net_balance, $t_id);
+     if ($stmt->execute()) {
+         return PROFILE_CREATED;
+     }
+     return PROFILE_NOT_CREATED;
+ }
+ function getNetbalanceCreditDebit() {
+    $stmt = $this->con->prepare("SELECT net_balance FROM transaction where t_id = (select MAX(t_id) from transaction)");
+    $stmt->execute();
+    $stmt->bind_result($netbalance);
+    $data = array();
+    while($stmt->fetch()) {
+        $test = array();
+        $test['netbalance'] = $netbalance;
+        array_push($data, $test);
+    }
+    $stmt = $this->con->prepare("SELECT SUM(credit) as total_credit FROM transaction ");
+    $stmt->execute();
+    $stmt->bind_result($total_credit);
+    while($stmt->fetch()) {
+        $test = array();
+        $test['total_credit'] = $total_credit;
+        array_push($data, $test);
+    }
+    $stmt = $this->con->prepare("SELECT SUM(debit) as total_debit FROM transaction");
+    $stmt->execute();
+    $stmt->bind_result($total_debit);
+    while($stmt->fetch()) {
+        $test = array();
+        $test['total_debit'] = $total_debit;
+        array_push($data, $test);
+    }
+    return $data;
+}
+function getTransactions() {
+    $stmt = $this->con->prepare("SELECT * FROM transaction");
+    $stmt->execute();
+    $stmt->bind_result($t_id, $type, $sub_type, $debit, $credit, $net_balance, $description, $date);
+    $cat = array();
+    while($stmt->fetch()) {
+        $test = array();
+        $test['t_id']= $t_id;
+        $test['type']= $type;
+        $test['sub_type']= $sub_type;
+        $test['debit']= $debit;
+        $test['credit']= $credit;
+        $test['net_balance']= $net_balance;
+        $test['description']= $description;
+        $test['date']= $date;
+        array_push($cat, $test);
+    }
+    return $cat;
+}
 
+// get Transaction by Type
+function getTransactionsbyType($type, $sub_type) {
+    $stmt = $this->con->prepare("SELECT * FROM transaction WHERE type=?");
+    $stmt->bind_param("s", $type);
+    $stmt->execute();
+    $stmt->bind_result($t_id, $type, $sub_type, $debit, $credit, $net_balance, $description, $date);
+    $cat = array();
+    while($stmt->fetch()) {
+        $test = array();
+        $test['t_id']= $t_id;
+        $test['type']= $type;
+        $test['sub_type']= $sub_type;
+        $test['debit']= $debit;
+        $test['credit']= $credit;
+        $test['net_balance']= $net_balance;
+        $test['description']= $description;
+        $test['date']= $date;
+        array_push($cat, $test);
+    }
+    return $cat;
+}
 
 }
 ?>
