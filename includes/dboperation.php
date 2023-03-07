@@ -630,11 +630,11 @@ class DbOperation
     }
 
     //room Api's
-    function addroom($r_id, $room_no, $charges)
+    function addroom($room_no, $charges)
     {
         $status = 'pending';
-        $stmt = $this->con->prepare("INSERT INTO `room_detail`(`r_id`, `room_no`, `charges`, `status`) VALUES (?,?,?,?)");
-        $stmt->bind_param("isis", $r_id, $room_no, $charges, $status);
+        $stmt = $this->con->prepare("INSERT INTO `room_detail`(`room_no`, `charges`, `status`) VALUES (?,?,?)");
+        $stmt->bind_param("sis", $room_no, $charges, $status);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
@@ -755,14 +755,14 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     }
     //doctor appointment
 
-    function appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type)
+    function appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no)
     {
         $status = 'pending';
         date_default_timezone_set("Asia/Karachi");
         $time = date("ymd");
 
-        $stmt = $this->con->prepare("INSERT INTO `appointment`(`p_name`, `p_no`, `p_age`, u_id ,  `doc_id` , `p_gender`, `time`, `fees`, `status`, type ) VALUES (?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssiiisssss", $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type);
+        $stmt = $this->con->prepare("INSERT INTO `appointment`(`p_name`, `p_no`, `p_age`, u_id ,  `doc_id` , `p_gender`, `time`, `fees`, `status`, `type`, `appointment_no` ) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("ssiiisssssi", $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
@@ -777,10 +777,10 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
         date_default_timezone_set("Asia/Karachi");
         $time = date("ymd");
 
-        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where time = ?");
+        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , appointment.appointment_no as appointment_no , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where time = ?");
         $stmt->bind_param("s", $time);
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $username, $doctor_name);
+        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no, $username, $doctor_name);
 
         $cat = array();
         while ($stmt->fetch()) {
@@ -796,6 +796,7 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
             $test['fees'] = $fees;
             $test['status'] = $status;
             $test['type'] = $type;
+            $test['appointment_no'] = $appointment_no;
             $test['username'] = $username;
             $test['doctor_name'] = $doctor_name;
             array_push($cat, $test);
@@ -808,10 +809,10 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     function getappointmentbyid($id)
     {
 
-        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where u_id = ?");
+        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , appointment.appointment_no as appointment_no , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where u_id = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $username, $doctor_name);
+        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no, $username, $doctor_name);
 
         $cat = array();
         while ($stmt->fetch()) {
@@ -827,6 +828,7 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
             $test['fees'] = $fees;
             $test['status'] = $status;
             $test['type'] = $type;
+            $test['appointment_no'] = $appointment_no;
             $test['username'] = $username;
             $test['doctor_name'] = $doctor_name;
             array_push($cat, $test);
@@ -837,10 +839,10 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     function getappointmentbyd_id($d_id)
     {
 
-        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where appointment.doc_id = ?");
+        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , appointment.appointment_no as appointment_no , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where appointment.doc_id = ?");
         $stmt->bind_param("i", $d_id);
         $stmt->execute();
-        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $username, $doctor_name);
+        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no, $username, $doctor_name);
 
         $cat = array();
         while ($stmt->fetch()) {
@@ -856,6 +858,7 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
             $test['fees'] = $fees;
             $test['status'] = $status;
             $test['type'] = $type;
+            $test['appointment_no'] = $appointment_no;
             $test['username'] = $username;
             $test['doctor_name'] = $doctor_name;
             array_push($cat, $test);
@@ -2226,6 +2229,45 @@ function getTransactionsbyType($type, $sub_type) {
     return $cat;
 }
 
+
+
+function getcurrentappointmentNumber($doc_id)
+{
+    date_default_timezone_set("Asia/Karachi");
+    $date = date("Y-m-d");
+    $stmt = $this->con->prepare("SELECT COUNT(id) AS current_number FROM `appointment` WHERE doc_id=? AND time='$date'");
+    $stmt->bind_param("i", $doc_id);
+    $stmt->execute();
+    $stmt->bind_result($current_number);
+
+    $cat = array();
+    while ($stmt->fetch()) {
+        $test = array();
+        $test['current_number'] = $current_number;
+
+        array_push($cat, $test);
+    }
+    return $cat;
+}
+
+function getPendingroom()
+{
+    $stmt = $this->con->prepare("SELECT * FROM `room_detail` WHERE status = 'pending'");
+    $stmt->execute();
+    $stmt->bind_result($rd_id, $r_id, $room_no, $charges, $status);
+
+    $cat = array();
+    while ($stmt->fetch()) {
+        $test = array();
+        $test['rd_id'] = $rd_id;
+        $test['r_id'] = $r_id;
+        $test['room_no'] = $room_no;
+        $test['charges'] = $charges;
+        $test['status'] = $status;
+        array_push($cat, $test);
+    }
+    return $cat;
+}
 
  // added by shahid //
 
