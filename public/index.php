@@ -545,12 +545,11 @@ $app->post('/get_attendence_date', function (Request $request, Response $respons
 
 $app->post('/addroom', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
-    $r_id = $requestData->r_id;
     $room_no = $requestData->r_type;
     $charges = $requestData->charges;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->addroom($r_id, $room_no, $charges)) {
+    if ($db->addroom($room_no, $charges)) {
         $responseData['error'] = false;
         $responseData['message'] = 'room is added';
     } else {
@@ -631,9 +630,10 @@ $app->post('/appointment', function (Request $request, Response $response) {
     $doc_id = $requestData->doc_id;
     $fees = $requestData->fees;
     $type = $requestData->type;
+    $appointment_no = $requestData->appointment_no;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type)) {
+    if ($db->appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data inserted sucessfully';
     } else {
@@ -1669,5 +1669,19 @@ $app->post('/getTransactionbyType', function (Request $request, Response $respon
     }
     $response->getBody()->write(json_encode($result));
 });
+
+$app->get('/getcurrentappointmentNumber/{doc_id}', function (Request $request, Response $response) {
+    $doc_id = $request->getAttribute('doc_id');
+    $db = new DbOperation();
+    $result = $db->getcurrentappointmentNumber($doc_id);
+    $response->getBody()->write(json_encode($result));
+});
+
+$app->get('/getPendingroom', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getPendingroom();
+    $response->getBody()->write(json_encode($result));
+});
+
 $app->run();
 ?>
