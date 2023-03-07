@@ -1688,8 +1688,10 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
         return PROFILE_NOT_CREATED;
     }
     //  Lab Test Variables
-    function addTestReport($t_id, $p_id, $p_name, $p_address, $p_no, $p_age, $blood, $p_gender, $date, $doc_ref, $status, $amount, $discount)
+    function addTestReport($t_id, $p_id, $p_name, $p_address, $p_no, $p_age, $blood, $p_gender, $doc_ref, $status, $amount, $discount)
     {
+        date_default_timezone_set("Asia/Karachi");
+        $date = date("ymd");
         $stmt = $this->con->prepare("INSERT INTO `test_report`(`t_id`, `p_id`, `p_name`, `p_address`, `p_no`, `p_age`, `blood`, `p_gender`, `date`, `doc_ref`,`status`,`amount`,`discount`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->bind_param("iisssisssisii", $t_id, $p_id, $p_name, $p_address, $p_no, $p_age, $blood, $p_gender, $date, $doc_ref, $status,$amount, $discount);
         if ($stmt->execute()) {
@@ -2224,5 +2226,87 @@ function getTransactionsbyType($type, $sub_type) {
     return $cat;
 }
 
+
+ // added by shahid //
+
+ function updateReport($p_name, $p_address, $p_no,$p_age , $blood , $date , $discount , $tr_id)
+{
+    
+    $stmt = $this->con->prepare("UPDATE `test_report` SET `p_name`=?,`p_address`=?,`p_no`=?,`p_age`=?,`blood`=?,`date`=?,`discount`=? WHERE tr_id = ?");
+    $stmt->bind_param("sssissii", $p_name, $p_address, $p_no,$p_age , $blood , $date , $discount , $tr_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
 }
+
+
+
+
+function deleteReport_with_Variables($t_id)
+{
+    
+    $stmt1 = $this->con->prepare("DELETE FROM `lab_test` WHERE `t_id`=?");
+    $stmt1->bind_param("i", $t_id);
+    $stmt = $this->con->prepare("DELETE FROM `test_variable` WHERE `t_id`=?");
+    $stmt->bind_param("i", $t_id);
+    if ($stmt1->execute() && $stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+
+
+
+function updateVariables($tv_name , $normal_range , $unit , $tv_id)
+{
+    $stmt = $this->con->prepare("UPDATE `test_variable` SET `tv_name`=?,`normal_range`=?,`unit`=? WHERE `tv_id`=?");
+    $stmt->bind_param("sssi", $tv_name , $normal_range , $unit , $tv_id);
+    if ($stmt->execute()){
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+
+function deleteInvs($inv_id)
+{
+    
+    $stmt = $this->con->prepare("DELETE FROM `investigations` WHERE inv_id = ?");
+    $stmt->bind_param("i", $inv_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+
+
+
+function UpdateInvs( $inv_name , $inv_price , $inv_id)
+{
+    
+    $stmt = $this->con->prepare("UPDATE `investigations` SET `inv_name`=? ,`inv_price`=? WHERE `inv_id`=?");
+    $stmt->bind_param("sii", $inv_name , $inv_price , $inv_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+
+
+function deleteTestReport($tr_id)
+{
+    
+    $stmt = $this->con->prepare("DELETE FROM `test_report` WHERE tr_id = ?");
+    $stmt->bind_param("i", $tr_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+}
+
 ?>

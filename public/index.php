@@ -1352,14 +1352,13 @@ $app->post('/addtestreport', function (Request $request, Response $response) {
     $p_age = $requestData->p_age;
     $blood = $requestData->blood;
     $p_gender = $requestData->p_gender;
-    $date = $requestData->date;
     $doc_ref = $requestData->doc_ref;
     $status = $requestData->status;
     $amount = $requestData->amount;
     $discount = $requestData->discount;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->addTestReport($t_id, $p_id, $p_name, $p_address, $p_no, $p_age, $blood, $p_gender, $date, $doc_ref, $status,$amount, $discount)) {
+    if ($db->addTestReport($t_id, $p_id, $p_name, $p_address, $p_no, $p_age, $blood, $p_gender, $doc_ref, $status,$amount, $discount)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data inserted sucessfully';
     } else {
@@ -1669,5 +1668,124 @@ $app->post('/getTransactionbyType', function (Request $request, Response $respon
     }
     $response->getBody()->write(json_encode($result));
 });
+
+
+
+// added by shahid //
+// Update Report 
+$app->post('/updateReport', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $p_name = $requestData->p_name;
+    $p_address = $requestData->p_address;
+    $p_no = $requestData->p_no;
+    $p_age = $requestData->p_age;
+    $blood = $requestData->blood;
+    $date = $requestData->date;
+    $discount = $requestData->discount;
+    $tr_id = $requestData->tr_id;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->updateReport($p_name, $p_address, $p_no,$p_age , $blood , $date , $discount , $tr_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'Report is updated';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'room is not Report';
+    }
+
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+$app->post('/DeleteFullTemplate', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $t_id = $requestData->t_id;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->deleteReport_with_Variables($t_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'Report and variables is deleted';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'Report and variables is not deleted';
+    }
+
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+$app->post('/updateVariables', function (Request $request, Response $response) {
+
+    $requestData = json_decode($request->getBody());
+    $vars = $requestData->vars;
+    foreach ($vars as $item) {
+        $tv_name = $item->tv_name;
+        $normal_range = $item->normal_range;
+        $unit = $item->unit;
+        $tv_id = $item->tv_id;
+        $db = new DbOperation();
+        $responseData = array();
+        $result = $db->updateVariables($tv_name , $normal_range , $unit , $tv_id);
+        if ($result == PROFILE_CREATED) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Variables is updated';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Variables are not updated';
+        }
+    }
+    $response->getBody()->write(json_encode($responseData));
+
+});
+
+    $app->post('/deleteInvs', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $inv_id = $requestData->inv_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->deleteInvs($inv_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Investigation is deleted';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Investigation is not deleted';
+        }
+    
+        $response->getBody()->write(json_encode($responseData));
+    });
+    
+    
+    $app->post('/UpdateInvs', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $inv_name = $requestData->inv_name;
+        $inv_price = $requestData->inv_price;
+        $inv_id = $requestData->inv_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->UpdateInvs($inv_name , $inv_price , $inv_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Investigations is updated';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Investigations is not Report';
+        }
+    $response->getBody()->write(json_encode($responseData));
+    });
+
+    $app->post('/deleteTestReport', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $tr_id = $requestData->tr_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->deleteTestReport($tr_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'ReportTest is deleted';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'ReportTest is not deleted';
+        }
+    
+        $response->getBody()->write(json_encode($responseData));
+    });
 $app->run();
 ?>
