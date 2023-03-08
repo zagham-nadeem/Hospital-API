@@ -1787,6 +1787,72 @@ $app->post('/updateVariables', function (Request $request, Response $response) {
     
         $response->getBody()->write(json_encode($responseData));
     });
+
+    $app->post('/AddAssets', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $name = $requestData->name;
+        $total_quantity = $requestData->total_quantity;
+        $inuse_quantity = $requestData->inuse_quantity;
+        $descarded_quantity = $requestData->descarded_quantity;
+        $is_useful = $requestData->is_useful;
+        $description = $requestData->description;
+        $type = $requestData->type;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->AddAssets($name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Asset is Added';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Asset is not Added';
+        }
+    $response->getBody()->write(json_encode($responseData));
+    });
+    
+    $app->get('/getAssets', function (Request $request, Response $response) {
+        $db = new DbOperation();
+        $result = $db->getasset();
+        $response->getBody()->write(json_encode($result));
+    });
+    
+    $app->post('/UpdateAssets', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $a_id = $requestData->a_id;
+        $name = $requestData->name;
+        $total_quantity = $requestData->total_quantity;
+        $inuse_quantity = $requestData->inuse_quantity;
+        $descarded_quantity = $requestData->descarded_quantity;
+        $is_useful = $requestData->is_useful;
+        $description = $requestData->description;
+        $type = $requestData->type;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->UpdateAssets($a_id ,$name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Asset is Updated';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Asset is not Updated';
+        }
+    $response->getBody()->write(json_encode($responseData));
+    });
+    
+    $app->post('/DeleteAsset', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $a_id = $requestData->a_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->DeleteAsset($a_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Asset is Deleted';
+        } else {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Asset is not Deleted';
+        }
+    $response->getBody()->write(json_encode($responseData));
+    });
+
+    
 $app->get('/getcurrentappointmentNumber/{doc_id}', function (Request $request, Response $response) {
     $doc_id = $request->getAttribute('doc_id');
     $db = new DbOperation();

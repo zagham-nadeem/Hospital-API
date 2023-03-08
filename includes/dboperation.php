@@ -2349,6 +2349,57 @@ function deleteTestReport($tr_id)
     }
     return PROFILE_NOT_CREATED;
 }
+function AddAssets($name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type)
+{
+    $stmt = $this->con->prepare("INSERT INTO `assets`( `name`, `total_quantity`, `inuse_quantity`, `descarded_quantity`, `is_useful`, `description`, `type`) VALUES (?,?,?,?,?,?,?)");
+    $stmt->bind_param("siiiiss", $name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type);
+    if ($stmt->execute()){
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+function getasset()
+{
+    $stmt = $this->con->prepare("SELECT `a_id`, `name`, `total_quantity`, `inuse_quantity`, `descarded_quantity`, `is_useful`, `description`, `type` FROM `assets` ");
+    $stmt->execute();
+    $stmt->bind_result($a_id ,$name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type);
+
+    $cat = array();
+    while ($stmt->fetch()) {
+        $test = array();
+        $test['a_id'] = $a_id;
+        $test['name'] = $name;
+        $test['total_quantity'] = $total_quantity;
+        $test['inuse_quantity'] = $inuse_quantity;
+        $test['descarded_quantity'] = $descarded_quantity;
+        $test['is_useful'] = $is_useful;
+        $test['description'] = $description;
+        $test['type'] = $type;
+        array_push($cat, $test);
+    }
+    return $cat;
+}
+
+function UpdateAssets($a_id,$name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type)
+{
+    $stmt = $this->con->prepare("UPDATE `assets` SET `name`=?,`total_quantity`=?,`inuse_quantity`=?,`descarded_quantity`=?,`is_useful`=?,`description`=?,`type`=? WHERE `a_id`=?");
+    $stmt->bind_param("siiiissi", $name , $total_quantity , $inuse_quantity , $descarded_quantity,$is_useful , $description , $type , $a_id );
+    if ($stmt->execute()){
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+function DeleteAsset($a_id)
+{
+    $stmt = $this->con->prepare("DELETE FROM `assets` WHERE a_id=?");
+    $stmt->bind_param("i", $a_id );
+    if ($stmt->execute()){
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
 }
 
 ?>
