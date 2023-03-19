@@ -2323,6 +2323,19 @@ function deleteInvs($inv_id)
     return PROFILE_NOT_CREATED;
 }
 
+function deleteRoom($rd_id)
+{
+    
+    $stmt = $this->con->prepare("DELETE FROM `room_detail` WHERE rd_id = ?");
+    $stmt->bind_param("i", $rd_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    } else
+   {
+    return PROFILE_NOT_CREATED;
+   }
+}
+
 
 
 

@@ -1754,6 +1754,24 @@ $app->post('/updateVariables', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode($responseData));
     });
     
+
+    $app->post('/deleteRoom', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $rd_id = $requestData->rd_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->deleteRoom($rd_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Room is deleted Successfully';
+        } else 
+           {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Room is not deleted';
+           }
+        
+    
+        $response->getBody()->write(json_encode($responseData));
+    });
     
     $app->post('/UpdateInvs', function (Request $request, Response $response) {
         $requestData = json_decode($request->getBody());
