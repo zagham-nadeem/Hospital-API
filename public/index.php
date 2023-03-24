@@ -263,6 +263,23 @@ $app->post('/updatedoctordetail', function (Request $request, Response $response
 
 
 
+$app->post('/updateTemplate', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $t_name = $requestData->t_name;
+    $t_id = $requestData->t_id;
+    $amount = $requestData->amount;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->updateTemplate($t_name, $amount, $t_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'data Updated sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'data is not Updated';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
 
 
 

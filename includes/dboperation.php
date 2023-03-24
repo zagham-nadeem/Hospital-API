@@ -354,6 +354,16 @@ class DbOperation
     }
 
 
+    function updateTemplate($t_name, $amount, $t_id)
+    {
+        $stmt = $this->con->prepare("UPDATE `lab_test` SET `t_name`=?,`amount`=? WHERE `t_id`=?");
+        $stmt->bind_param("sii", $t_name, $amount, $t_id);
+        if ($stmt->execute()) {
+            return PROFILE_CREATED;
+        }
+        return PROFILE_NOT_CREATED;
+    }
+
 
 
 
