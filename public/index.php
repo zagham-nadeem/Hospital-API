@@ -242,7 +242,7 @@ $app->post('/deletedoctor', function (Request $request, Response $response) {
 
 $app->post('/updatedoctordetail', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
-    $id = $requestData->id;
+    $d_id = $requestData->d_id;
     $name = $requestData->name;
     $email = $requestData->email;
     $age = $requestData->age;
@@ -251,7 +251,7 @@ $app->post('/updatedoctordetail', function (Request $request, Response $response
     $d_no = $requestData->d_no;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no)) {
+    if ($db->updatedoctordetail($d_id, $name, $email, $age, $gender, $fees, $d_no)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data Updated sucessfully';
     } else {
