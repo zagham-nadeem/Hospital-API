@@ -249,9 +249,11 @@ $app->post('/updatedoctordetail', function (Request $request, Response $response
     $gender = $requestData->gender;
     $fees = $requestData->fees;
     $d_no = $requestData->d_no;
+    $speciality = $requestData->speciality;
+    $dp_id = $requestData->dp_id;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->updatedoctordetail($d_id, $name, $email, $age, $gender, $fees, $d_no)) {
+    if ($db->updatedoctordetail($d_id, $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data Updated sucessfully';
     } else {

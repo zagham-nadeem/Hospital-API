@@ -343,10 +343,10 @@ class DbOperation
 
     //update
 
-    function updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no)
+    function updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id)
     {
-        $stmt = $this->con->prepare("UPDATE `doctor` SET `name`= ?,`email`=?,`age`=?,`gender`=?,`fees`=?,`d_no`=? WHERE `d_id` =?");
-        $stmt->bind_param("ssisssi", $name, $email, $age, $gender, $fees, $d_no, $id);
+        $stmt = $this->con->prepare("UPDATE `doctor` SET `name`= ?,`email`=?,`age`=?,`gender`=?,`fees`=?,`d_no`=?,`speciality`=?,`dp_id`=? WHERE `d_id` =?");
+        $stmt->bind_param("ssissssii", $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id, $id);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
