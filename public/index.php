@@ -218,10 +218,10 @@ $app->post('/updatedoctorlogin', function (Request $request, Response $response)
 
 $app->post('/deletedoctor', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
-    $id = $requestData->id;
+    $d_id = $requestData->d_id;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->deletedoctor($id)) {
+    if ($db->deletedoctor($d_id)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data deleted sucessfully';
     } else {
@@ -1418,6 +1418,29 @@ $app->post('/add_test', function (Request $request, Response $response) {
             }
         }
     }
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+// Add Test Variables
+$app->post('/add_vars', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $variables = $requestData;
+        foreach ($variables as $item) {
+            $tv_name = $item->tv_name;
+            $t_id = $item->t_id;
+            $normal_range = $item->normal_range;
+            $unit = $item->unit;
+            $db = new DbOperation();
+            if ($db->addTestVariables($t_id, $tv_name, $normal_range, $unit)) {
+                $responseData['error'] = false;
+                $responseData['Message'] = "variables added sucessfully";
+            } else {
+                $responseData['error'] = true;
+                $responseData['message'] = 'variables is not inserted';
+            }
+        }
+    
     $response->getBody()->write(json_encode($responseData));
 });
 

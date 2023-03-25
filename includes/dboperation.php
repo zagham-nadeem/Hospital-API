@@ -328,14 +328,16 @@ class DbOperation
 
     //delete
 
-    function deletedoctor($id)
+    function deletedoctor($d_id)
     {
         $stmt = $this->con->prepare("DELETE FROM `doctor` Where d_id = ? ");
-        $stmt->bind_param("i", $id);
-        if ($stmt->execute()) {
-            return PROFILE_DELETED;
+        $stmt->bind_param("i", $d_id);
+        $stmt1 = $this->con->prepare("DELETE FROM `doctor_detail` WHERE d_id = ?");
+        $stmt1->bind_param("i", $d_id);
+        if ($stmt->execute() && $stmt1->execute()) {
+            return PROFILE_CREATED;
         }
-        return PROFILE_NOT_DELETED;
+        return PROFILE_NOT_CREATED;
     }
 
 
