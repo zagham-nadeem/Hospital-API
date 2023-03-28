@@ -165,6 +165,27 @@ $app->post('/add_doctor', function (Request $request, Response $response) {
 });
 
 
+$app->post('/Update_doctorSchedule', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $days = $requestData;
+        foreach ($days as $item) {
+            $day = $item->day;
+            $d_id = $item->d_id;
+            $from_time = $item->from_time;
+            $to_time = $item->to_time;
+            $db = new DbOperation();
+            $result = $db->Update_doctordetail($d_id, $day, $from_time, $to_time);
+            if ($result == ORDER_PLACED) {
+                $responseData['error'] = false;
+                $responseData['Message'] = "Days added sucessfully";
+            } else {
+                $responseData['error'] = true;
+                $responseData['message'] = 'Days are not inserted';
+            }
+        }
+    
+    $response->getBody()->write(json_encode($responseData));
+});
 
 $app->get('/getprofile/{id}', function (Request $request, Response $response) {
     $id = $request->getAttribute('id');
@@ -215,7 +236,6 @@ $app->post('/updatedoctorlogin', function (Request $request, Response $response)
 
 
 
-
 $app->post('/deletedoctor', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $d_id = $requestData->d_id;
@@ -231,6 +251,23 @@ $app->post('/deletedoctor', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode($responseData));
 });
 
+$app->post('/CancelDischarged', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $id = $requestData->id;
+    $d_id = $requestData->d_id;
+    $r_id = $requestData->r_id;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->CancelDischarged($id,$d_id,$r_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'Status Changed To Pending sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'Status is not Changed To Pending';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
 
 
 
@@ -238,6 +275,28 @@ $app->post('/deletedoctor', function (Request $request, Response $response) {
 //update
 
 
+
+
+// $app->post('/updatedoctordetail', function (Request $request, Response $response) {
+//     $requestData = json_decode($request->getBody());
+//     $id = $requestData->id;
+//     $name = $requestData->name;
+//     $email = $requestData->email;
+//     $age = $requestData->age;
+//     $gender = $requestData->gender;
+//     $fees = $requestData->fees;
+//     $d_no = $requestData->d_no;
+//     $db = new DbOperation();
+//     $responseData = array();
+//     if ($db->updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no)) {
+//         $responseData['error'] = false;
+//         $responseData['message'] = 'data Updated sucessfully';
+//     } else {
+//         $responseData['error'] = true;
+//         $responseData['message'] = 'data is not inserted';
+//     }
+//     $response->getBody()->write(json_encode($responseData));
+// });
 
 
 $app->post('/updatedoctordetail', function (Request $request, Response $response) {
@@ -265,27 +324,6 @@ $app->post('/updatedoctordetail', function (Request $request, Response $response
 
 
 
-$app->post('/updateTemplate', function (Request $request, Response $response) {
-    $requestData = json_decode($request->getBody());
-    $t_name = $requestData->t_name;
-    $t_id = $requestData->t_id;
-    $amount = $requestData->amount;
-    $db = new DbOperation();
-    $responseData = array();
-    if ($db->updateTemplate($t_name, $amount, $t_id)) {
-        $responseData['error'] = false;
-        $responseData['message'] = 'data Updated sucessfully';
-    } else {
-        $responseData['error'] = true;
-        $responseData['message'] = 'data is not Updated';
-    }
-    $response->getBody()->write(json_encode($responseData));
-});
-
-
-
-
-
 
 //Add Staff
 
@@ -300,7 +338,7 @@ $app->post('/add_staff', function (Request $request, Response $response) {
     $salary = $requestData->salary;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->addStaff($name, $no, $gender, $age, $catagory, $schedule, $salary)) {
+    if ($db->addStaff($name, $no,  $age,$gender, $catagory, $schedule, $salary)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data inserted sucessfully';
     } else {
@@ -322,7 +360,7 @@ $app->post('/updatestaffdetail', function (Request $request, Response $response)
     $salary = $requestData->salary;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->updateStaff($id, $name, $no, $gender, $age, $catagory, $schedule, $salary)) {
+    if ($db->updateStaff($id, $name, $no,  $age,$gender, $catagory, $schedule, $salary)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data updated sucessfully';
     } else {
@@ -456,13 +494,19 @@ $app->post('/add_roaster', function (Request $request, Response $response) {
 //get roaster
 $app->post('/get_roaster', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
-    $month = $requestData->month;
     $year = $requestData->year;
     $db = new DbOperation();
     $responseData = array();
-    $result = $db->get_roaster($month, $year);
+    $result = $db->get_roaster($year);
 
     $response->getBody()->write(json_encode($result));
+});
+
+
+$app->get('/get_Allroaster', function (Request $rqst, Response $rspn) {
+    $db = new DbOperation();
+    $result = $db->get_Allroaster();
+    $rspn->getBody()->write(json_encode($result));
 });
 
 // update rosater
@@ -580,6 +624,27 @@ $app->post('/addroom', function (Request $request, Response $response) {
 });
 
 // Update Room
+
+
+$app->post('/deleteRoom', function (Request $request, Response $response) {
+        $requestData = json_decode($request->getBody());
+        $rd_id = $requestData->rd_id;
+        $db = new DbOperation();
+        $responseData = array();
+        if ($db->deleteRoom($rd_id)) {
+            $responseData['error'] = false;
+            $responseData['message'] = 'Room is deleted Successfully';
+        } else 
+           {
+            $responseData['error'] = true;
+            $responseData['message'] = 'Room is not deleted';
+           }
+        
+    
+        $response->getBody()->write(json_encode($responseData));
+    });
+
+
 $app->post('/updateroom', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $rd_id = $requestData->rd_id;
@@ -649,10 +714,11 @@ $app->post('/appointment', function (Request $request, Response $response) {
     $doc_id = $requestData->doc_id;
     $fees = $requestData->fees;
     $type = $requestData->type;
+    $added_by = $requestData->added_by;
     $appointment_no = $requestData->appointment_no;
     $db = new DbOperation();
     $responseData = array();
-    if ($db->appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no)) {
+    if ($db->appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no,$added_by)) {
         $responseData['error'] = false;
         $responseData['message'] = 'data inserted sucessfully';
     } else {
@@ -668,6 +734,12 @@ $app->post('/appointment', function (Request $request, Response $response) {
 $app->get('/getappointment', function (Request $request, Response $response) {
     $db = new DbOperation();
     $result = $db->getappointment();
+    $response->getBody()->write(json_encode($result));
+});
+
+$app->get('/getOverallAppo', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->getOverallAppo();
     $response->getBody()->write(json_encode($result));
 });
 
@@ -1361,6 +1433,28 @@ $app->post('/deletePatient', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode($responseData));
 });
 // Lab Test
+
+
+$app->post('/updateTemplate', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $t_name = $requestData->t_name;
+    $t_id = $requestData->t_id;
+    $amount = $requestData->amount;
+    $db = new DbOperation();
+    $responseData = array();
+    if ($db->updateTemplate($t_name, $amount, $t_id)) {
+        $responseData['error'] = false;
+        $responseData['message'] = 'data Updated sucessfully';
+    } else {
+        $responseData['error'] = true;
+        $responseData['message'] = 'data is not Updated';
+    }
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+
+
 $app->post('/addtestreport', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
     $t_id = $requestData->t_id;
@@ -1418,29 +1512,6 @@ $app->post('/add_test', function (Request $request, Response $response) {
             }
         }
     }
-    $response->getBody()->write(json_encode($responseData));
-});
-
-
-// Add Test Variables
-$app->post('/add_vars', function (Request $request, Response $response) {
-    $requestData = json_decode($request->getBody());
-    $variables = $requestData;
-        foreach ($variables as $item) {
-            $tv_name = $item->tv_name;
-            $t_id = $item->t_id;
-            $normal_range = $item->normal_range;
-            $unit = $item->unit;
-            $db = new DbOperation();
-            if ($db->addTestVariables($t_id, $tv_name, $normal_range, $unit)) {
-                $responseData['error'] = false;
-                $responseData['Message'] = "variables added sucessfully";
-            } else {
-                $responseData['error'] = true;
-                $responseData['message'] = 'variables is not inserted';
-            }
-        }
-    
     $response->getBody()->write(json_encode($responseData));
 });
 
@@ -1558,6 +1629,12 @@ $app->get('/getpendingoperation', function (Request $request, Response $response
     $result = $db->getpendingoperation();
     $response->getBody()->write(json_encode($result));
 });
+
+$app->get('/OverallOperates', function (Request $request, Response $response) {
+    $db = new DbOperation();
+    $result = $db->OverallOperates();
+    $response->getBody()->write(json_encode($result));
+});
 //  Add Investigating
 $app->post('/addInvestigations', function (Request $request, Response $response) {
     $requestData = json_decode($request->getBody());
@@ -1650,6 +1727,13 @@ $app->get('/getDischarged', function (Request $request, Response $response) {
     $result = $db->getDischarged();
     $response->getBody()->write(json_encode($result));
 });
+$app->get('/MarkFakeTransaction/{t_id}', function (Request $request, Response $response) {
+    $t_id = $request->getAttribute('t_id');
+    $db = new DbOperation();
+    $result = $db->MarkFakeTransaction($t_id);
+    $response->getBody()->write(json_encode($result));
+});
+
 $app->get('/getDischargedExpensebyDid/{d_id}', function (Request $request, Response $response) {
     $d_id = $request->getAttribute('d_id');
     $db = new DbOperation();
@@ -1796,24 +1880,6 @@ $app->post('/updateVariables', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode($responseData));
     });
     
-
-    $app->post('/deleteRoom', function (Request $request, Response $response) {
-        $requestData = json_decode($request->getBody());
-        $rd_id = $requestData->rd_id;
-        $db = new DbOperation();
-        $responseData = array();
-        if ($db->deleteRoom($rd_id)) {
-            $responseData['error'] = false;
-            $responseData['message'] = 'Room is deleted Successfully';
-        } else 
-           {
-            $responseData['error'] = true;
-            $responseData['message'] = 'Room is not deleted';
-           }
-        
-    
-        $response->getBody()->write(json_encode($responseData));
-    });
     
     $app->post('/UpdateInvs', function (Request $request, Response $response) {
         $requestData = json_decode($request->getBody());
@@ -1925,6 +1991,33 @@ $app->get('/getPendingroom', function (Request $request, Response $response) {
     $result = $db->getPendingroom();
     $response->getBody()->write(json_encode($result));
 });
+
+
+$app->post('/add_vars', function (Request $request, Response $response) {
+    $requestData = json_decode($request->getBody());
+    $variables = $requestData;
+        foreach ($variables as $item) {
+            $tv_name = $item->tv_name;
+            $t_id = $item->t_id;
+            $normal_range = $item->normal_range;
+            $unit = $item->unit;
+            $db = new DbOperation();
+            if ($db->addTestVariables($t_id, $tv_name, $normal_range, $unit)) {
+                $responseData['error'] = false;
+                $responseData['Message'] = "variables added sucessfully";
+            } else {
+                $responseData['error'] = true;
+                $responseData['message'] = 'variables is not inserted';
+            }
+        }
+    
+    $response->getBody()->write(json_encode($responseData));
+});
+
+
+
+
+
 
 $app->run();
 ?>

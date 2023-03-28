@@ -248,6 +248,17 @@ class DbOperation
         }
     }
 
+    function Update_doctordetail($d_id, $day, $from_time, $to_time)
+    {
+        $stmt = $this->con->prepare("UPDATE `doctor_detail` SET `from_time`=?,`to_time`=? WHERE `day`=? AND `d_id`=?");
+        $stmt->bind_param("sssi", $from_time, $to_time ,$day,$d_id);
+        if ($stmt->execute()) {
+            return ORDER_PLACED;
+        } else {
+            return ORDER_NOT_PLACED;
+        }
+    }
+    
     function add_stafflogin($username, $password)
     {   
         $role = "doctor";
@@ -328,38 +339,48 @@ class DbOperation
 
     //delete
 
-    function deletedoctor($d_id)
+    function deletedoctor($id)
     {
         $stmt = $this->con->prepare("DELETE FROM `doctor` Where d_id = ? ");
-        $stmt->bind_param("i", $d_id);
-        $stmt1 = $this->con->prepare("DELETE FROM `doctor_detail` WHERE d_id = ?");
-        $stmt1->bind_param("i", $d_id);
-        if ($stmt->execute() && $stmt1->execute()) {
-            return PROFILE_CREATED;
+        $stmt->bind_param("i", $id);
+        if ($stmt->execute()) {
+            return PROFILE_DELETED;
         }
-        return PROFILE_NOT_CREATED;
+        return PROFILE_NOT_DELETED;
     }
 
+    function CancelDischarged($id,$d_id,$r_id)
+    {
+        $description = "Patient No" .$id. "Discharge";
+
+        $stmt = $this->con->prepare("UPDATE `operate` SET status = 'pending' WHERE `id`=?");
+        $stmt->bind_param("i", $id);
+    
+        $stmt1 = $this->con->prepare("DELETE FROM `discharge` WHERE d_id = ?");
+        $stmt1->bind_param("i", $d_id);
+
+        $stmt3 = $this->con->prepare("DELETE FROM `discharge_expense` WHERE d_id =?");
+        $stmt3->bind_param("i", $d_id);
+
+        $stmt4 = $this->con->prepare("DELETE FROM `transaction` WHERE description = ?");
+        $stmt4->bind_param("s", $description);
+
+        $stmt2 = $this->con->prepare("UPDATE `room_detail` SET `status`= 'confirm' WHERE room_detail.r_id = ?");
+        $stmt2->bind_param("i", $r_id);
+
+        if ($stmt->execute() && $stmt1->execute() && $stmt2->execute() && $stmt3->execute() && $stmt4->execute()) {
+            return PROFILE_CREATED;
+        }
+        return PROFILE_CREATED;
+    }
 
 
 
     //update
-
-    function updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id)
+function updatedoctordetail($id, $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id)
     {
         $stmt = $this->con->prepare("UPDATE `doctor` SET `name`= ?,`email`=?,`age`=?,`gender`=?,`fees`=?,`d_no`=?,`speciality`=?,`dp_id`=? WHERE `d_id` =?");
         $stmt->bind_param("ssissssii", $name, $email, $age, $gender, $fees, $d_no,$speciality,$dp_id, $id);
-        if ($stmt->execute()) {
-            return PROFILE_CREATED;
-        }
-        return PROFILE_NOT_CREATED;
-    }
-
-
-    function updateTemplate($t_name, $amount, $t_id)
-    {
-        $stmt = $this->con->prepare("UPDATE `lab_test` SET `t_name`=?,`amount`=? WHERE `t_id`=?");
-        $stmt->bind_param("sii", $t_name, $amount, $t_id);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
@@ -373,17 +394,17 @@ class DbOperation
 
     //Add Staff 
 
-    function addStaff($name, $no, $gender, $age, $catagory, $shedule, $salary)
+    function addStaff($name, $no,  $age,$gender, $catagory, $shedule, $salary)
     {
         $stmt = $this->con->prepare("INSERT INTO `staff`( `name`, `no`, `age`, `gender`, `catagory`, `schedule`, `salary`) VALUES (?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssisssi", $name, $no, $gender, $age, $catagory, $shedule, $salary);
+        $stmt->bind_param("ssisssi", $name, $no,  $age,$gender, $catagory, $shedule, $salary);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
         return PROFILE_NOT_CREATED;
     }
     // Update Staff
-    function updateStaff($id, $name, $no, $gender, $age, $catagory, $shedule, $salary)
+    function updateStaff($id, $name, $no,  $age, $gender, $catagory, $shedule, $salary)
     {
         $stmt = $this->con->prepare("UPDATE `staff` SET `name`= ?,`no`= ?,`age`= ?,`gender`= ?,`catagory`= ?,`schedule`= ?,`salary`= ? WHERE `id`=?");
         $stmt->bind_param("ssisssii", $name, $no, $age, $gender,  $catagory, $shedule, $salary,$id);
@@ -502,10 +523,10 @@ class DbOperation
 
     //get roaster
 
-    function get_roaster($month, $year)
+    function get_roaster($year)
     {
-        $stmt = $this->con->prepare("SELECT staff_roaster.* , staff.name , staff.catagory FROM `staff_roaster` join staff on staff_roaster.id = staff.id  WHERE staff_roaster.month = ? AND staff_roaster.year = ?");
-        $stmt->bind_param("ss", $month, $year);
+        $stmt = $this->con->prepare("SELECT staff_roaster.* , staff.name , staff.catagory FROM `staff_roaster` join staff on staff_roaster.id = staff.id  WHERE staff_roaster.year = ?");
+        $stmt->bind_param("s",$year);
         $stmt->execute();
         $stmt->bind_result($id, $shift, $month, $year, $other, $name, $catagory);
 
@@ -524,6 +545,27 @@ class DbOperation
         return $cat;
     }
 
+
+    function get_Allroaster()
+    {
+        $stmt = $this->con->prepare("SELECT staff_roaster.* , staff.name , staff.catagory FROM `staff_roaster` join staff on staff_roaster.id = staff.id");
+        $stmt->execute();
+        $stmt->bind_result($id, $shift, $month, $year, $other, $name, $catagory);
+
+        $cat = array();
+        while ($stmt->fetch()) {
+            $test = array();
+            $test['id'] = $id;
+            $test['shift'] = $shift;
+            $test['month'] = $month;
+            $test['year'] = $year;
+            $test['other'] = $other;
+            $test['name'] = $name;
+            $test['category'] = $catagory;
+            array_push($cat, $test);
+        }
+        return $cat;
+    }
     // update roaster
 
     function update_roaster($id, $month, $year, $shift)
@@ -642,6 +684,23 @@ class DbOperation
     }
 
     //room Api's
+    
+    
+    function deleteRoom($rd_id)
+{
+    
+    $stmt = $this->con->prepare("DELETE FROM `room_detail` WHERE rd_id = ?");
+    $stmt->bind_param("i", $rd_id);
+    if ($stmt->execute()) {
+        return PROFILE_CREATED;
+    } else
+   {
+    return PROFILE_NOT_CREATED;
+   }
+}
+    
+    
+    
     function addroom($room_no, $charges)
     {
         $status = 'pending';
@@ -767,14 +826,14 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     }
     //doctor appointment
 
-    function appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no)
+    function appointment($p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $fees, $type, $appointment_no,$added_by)
     {
         $status = 'pending';
         date_default_timezone_set("Asia/Karachi");
         $time = date("ymd");
 
-        $stmt = $this->con->prepare("INSERT INTO `appointment`(`p_name`, `p_no`, `p_age`, u_id ,  `doc_id` , `p_gender`, `time`, `fees`, `status`, `type`, `appointment_no` ) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->bind_param("ssiiisssssi", $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no);
+        $stmt = $this->con->prepare("INSERT INTO `appointment`(`p_name`, `p_no`, `p_age`, u_id ,  `doc_id` , `p_gender`, `time`, `fees`, `status`, `type`, `appointment_no`, `added_by`  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $stmt->bind_param("ssiiisssssis", $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no,$added_by);
         if ($stmt->execute()) {
             return PROFILE_CREATED;
         }
@@ -791,6 +850,36 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
 
         $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , appointment.appointment_no as appointment_no , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id where time = ?");
         $stmt->bind_param("s", $time);
+        $stmt->execute();
+        $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no, $username, $doctor_name);
+
+        $cat = array();
+        while ($stmt->fetch()) {
+            $test = array();
+            $test['id'] = $id;
+            $test['p_name'] = $p_name;
+            $test['p_no'] = $p_no;
+            $test['p_age'] = $p_age;
+            $test['u_id'] = $u_id;
+            $test['doc_id'] = $doc_id;
+            $test['p_gender'] = $p_gender;
+            $test['time'] = $time;
+            $test['fees'] = $fees;
+            $test['status'] = $status;
+            $test['type'] = $type;
+            $test['appointment_no'] = $appointment_no;
+            $test['username'] = $username;
+            $test['doctor_name'] = $doctor_name;
+            array_push($cat, $test);
+        }
+        return $cat;
+    }
+
+
+    
+    function getOverallAppo()
+    {
+        $stmt = $this->con->prepare("SELECT appointment.id as id , appointment.p_name as p_name , appointment.p_no as p_no , appointment.p_age as p_age , appointment.u_id as u_id , appointment.doc_id as doc_id , appointment.p_gender as p_gender , appointment.time as time , appointment.fees as fee , appointment.status as status , appointment.type as type , appointment.appointment_no as appointment_no , login.username as username , doctor.name as doctor_name FROM appointment JOIN login on appointment.u_id = login.id JOIN doctor on appointment.doc_id = doctor.d_id");
         $stmt->execute();
         $stmt->bind_result($id, $p_name, $p_no, $p_age, $u_id, $doc_id, $p_gender, $time, $fees, $status, $type, $appointment_no, $username, $doctor_name);
 
@@ -1679,6 +1768,21 @@ function updateRoom($rd_id,$r_id, $room_no, $charges,$status)
     }
 
     //  Lab Test
+    
+    
+    function updateTemplate($t_name, $amount, $t_id)
+    {
+        $stmt = $this->con->prepare("UPDATE `lab_test` SET `t_name`=?,`amount`=? WHERE `t_id`=?");
+        $stmt->bind_param("sii", $t_name, $amount, $t_id);
+        if ($stmt->execute()) {
+            return PROFILE_CREATED;
+        }
+        return PROFILE_NOT_CREATED;
+    }
+    
+    
+    
+    
     function addTest($t_name, $amount, $other)
     {
         $stmt = $this->con->prepare("INSERT INTO `lab_test`(`t_name`,`amount`, `other`) VALUES (?,?,?)");
@@ -1967,6 +2071,37 @@ function getTestResult($tr_id)
         }
         return $cat;
     }
+
+
+    function OverallOperates()
+    {
+        $stmt = $this->con->prepare("SELECT operate.id as id , operate.p_name as p_name , operate.p_age as p_age,operate.p_no as p_no , operate.d_fees as d_fee , operate.date as time , operate.p_gender as p_gender, operate.description as opdescription, operate.advance as advance , operate.remaining_amount as remaining_amount , room_detail.rd_id  as rd_id , room_detail.r_id as r_id , room_detail.room_no , room_detail.charges as room_charges, doctor.name as drname FROM `operate` JOIN room_detail ON room_detail.rd_id = operate.r_id JOIN doctor ON doctor.d_id = operate.d_id ");
+        $stmt->execute();
+        $stmt->bind_result($id, $p_name, $p_age, $p_no, $d_fees, $time, $p_gender, $opdescription, $advance, $remaining_amount, $rd_id, $r_id, $room_no, $room_charges, $drname);
+
+        $cat = array();
+        while ($stmt->fetch()) {
+            $test = array();
+            $test['id'] = $id;
+            $test['p_name'] = $p_name;
+            $test['p_age'] = $p_age;
+            $test['p_no'] = $p_no;
+            $test['d_fees'] = $d_fees;
+            $test['time'] = $time;
+            $test['p_gender'] = $p_gender;
+            $test['opdescription'] = $opdescription;
+            $test['advance'] = $advance;
+            $test['remaining_amount'] = $remaining_amount;
+            $test['rd_id'] = $rd_id;
+            $test['r_id'] = $r_id;
+            $test['room_no'] = $room_no;
+            $test['room_charges'] = $room_charges;
+            $test['drname'] = $drname;
+
+            array_push($cat, $test);
+        }
+        return $cat;
+    }
      // Add Investigating 
     function addInvestigating($inv_name, $inv_price)
     {
@@ -2199,10 +2334,53 @@ function getDischargedExpensebyDid($d_id)
     }
     return $data;
 }
+
+function MarkFakeTransaction($t_id){
+
+    $stmt = $this->con->prepare("SELECT net_balance , t_id FROM transaction where t_id = (select MAX(t_id) from transaction)");
+    $stmt->execute();
+    $stmt->bind_result($current_balance , $allt_id);
+    $data = array();
+    while($stmt->fetch()) {
+        $test = array();
+        $test['curr'] = $current_balance;
+        $test['allt_id'] = $allt_id;
+        array_push($data, $test);
+    }
+    $stmt1 = $this->con->prepare("SELECT `credit`,`debit` FROM `transaction` WHERE t_id = ?");
+    $stmt1->bind_param("i", $t_id);
+    $stmt1->execute();
+    $stmt1->bind_result($credit,$debit);
+    $data = array();
+    while($stmt1->fetch()) {
+        $test = array();
+        $test['credit'] = $credit;
+        $test['debit'] = $debit;
+        array_push($data, $test);
+    }
+    $net_balance = 0;
+    $net_balance = $current_balance - $credit ;
+    $net_balance = $net_balance + $debit ;
+
+    $stmt3 = $this->con->prepare("UPDATE `transaction` SET `net_balance`=?  WHERE `t_id`=?");
+    $stmt3->bind_param("ii",$net_balance, $allt_id);
+
+
+    $stmt4 = $this->con->prepare("UPDATE `transaction` SET `is_fake`=1,credit=0,debit=0 WHERE `t_id`=?");
+    $stmt4->bind_param("i", $t_id);
+    if($stmt3->execute() && $stmt4->execute()){
+        return PROFILE_CREATED;
+    }
+    return PROFILE_NOT_CREATED;
+}
+
+
+
+
 function getTransactions() {
     $stmt = $this->con->prepare("SELECT * FROM transaction");
     $stmt->execute();
-    $stmt->bind_result($t_id, $type, $sub_type, $debit, $credit, $net_balance, $description, $date);
+    $stmt->bind_result($t_id, $type, $sub_type, $debit, $credit, $net_balance, $description, $date, $is_fake);
     $cat = array();
     while($stmt->fetch()) {
         $test = array();
@@ -2214,6 +2392,7 @@ function getTransactions() {
         $test['net_balance']= $net_balance;
         $test['description']= $description;
         $test['date']= $date;
+        $test['is_fake']= $is_fake;
         array_push($cat, $test);
     }
     return $cat;
@@ -2333,19 +2512,6 @@ function deleteInvs($inv_id)
         return PROFILE_CREATED;
     }
     return PROFILE_NOT_CREATED;
-}
-
-function deleteRoom($rd_id)
-{
-    
-    $stmt = $this->con->prepare("DELETE FROM `room_detail` WHERE rd_id = ?");
-    $stmt->bind_param("i", $rd_id);
-    if ($stmt->execute()) {
-        return PROFILE_CREATED;
-    } else
-   {
-    return PROFILE_NOT_CREATED;
-   }
 }
 
 
